@@ -4,6 +4,7 @@ import PropTypes from "prop-types";
 
 function AutoScaleImage({ style, source, ...restProps }) {
   const flattenedStyles = useMemo(() => StyleSheet.flatten(style), [style]);
+
   if (
     typeof flattenedStyles.width !== "number" &&
     typeof flattenedStyles.height !== "number"
@@ -11,9 +12,7 @@ function AutoScaleImage({ style, source, ...restProps }) {
     throw new Error("AutoScaleImage requires either width or height");
   }
 
-  const hasURI = ('uri' in source) && !!source.uri
-
-  if (!hasURI) {
+  if (!source.uri) {
     throw new Error("AutoScaleImage requires a source uri")
   }
 
@@ -21,10 +20,15 @@ function AutoScaleImage({ style, source, ...restProps }) {
     width: flattenedStyles.width,
     height: flattenedStyles.height
   });
+  const [uri, setUri] = useState(source.uri)
 
   useEffect(() => {
-    if (!flattenedStyles.width || !flattenedStyles.height && source && hasURI) {
-      Image.getSize(source.uri, (w, h) => {
+    if (uri) {
+      setUri(uri)
+    }
+
+    if (!flattenedStyles.width || !flattenedStyles.height && uri) {
+      Image.getSize(uri, (w, h) => {
         const ratio = w / h;
         setSize({
           width: flattenedStyles.width || ratio * flattenedStyles.height || 0,
@@ -32,9 +36,9 @@ function AutoScaleImage({ style, source, ...restProps }) {
         });
       });
     }
-  }, [source, flattenedStyles.width, flattenedStyles.height]);
+  }, [uri, flattenedStyles.width, flattenedStyles.height]);
 
-  return <Image source={source} style={[style, size]} {...restProps} />;
+  return <Image source={{ uri }} style={[style, size]} {...restProps} />;
 }
 
 AutoScaleImage.propTypes = {
